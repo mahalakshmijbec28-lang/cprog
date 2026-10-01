@@ -1,0 +1,101 @@
+#include <stdlib.h>
+
+// A single entry representing a historical change at a specific snapshot
+typedef struct {
+    int snap_id;
+    int val;
+} SnapEntry;
+
+// The main struct representing the Snapshot Array
+typedef struct {
+    SnapEntry** history; // An array of dynamic arrays (one history list per index)
+    int* sizes;          // Tracks the current number of entries for each index
+    int* capacities;     // Tracks allocated memory capacity for each index
+    int length;          // Total length of the array
+    int current_snap_id; // Tracks the current snapshot ID
+} SnapshotArray;
+
+SnapshotArray* snapshotArrayCreate(int length) {
+    SnapshotArray* obj = (SnapshotArray*)malloc(sizeof(SnapshotArray));
+    obj->length = length;
+    obj->current_snap_id = 0;
+    
+    // Allocate space for history, size tracking, and capacity tracking
+    obj->history = (SnapEntry**)malloc(length * sizeof(SnapEntry*));
+    obj->sizes = (int*)calloc(length, sizeof(int));
+    obj->capacities = (int*)malloc(length * sizeof(int));
+    
+    // Initialize each index with a default entry: value 0 at snap_id 0
+    for (int i = 0; i < length; i++) {
+        obj->capacities[i] = 4; // Start with a small default capacity
+        obj->history[i] = (SnapEntry*)malloc(obj->capacities[i] * sizeof(SnapEntry));
+        
+        obj->history[i][0].snap_id = 0;
+        obj->history[i][0].val = 0;
+        obj->sizes[i] = 1;
+    }
+    
+    return obj;
+}
+
+void snapshotArraySet(SnapshotArray* obj, int index, int val) {
+    int size = obj->sizes[index];
+    
+    // Optimization: If the last change was made during the *same* snapshot ID,
+    // simply overwrite it instead of adding a duplicate history entry.
+    if (size > 0 && obj->history[index][size - 1].snap_id == obj->current_snap_id) {
+        obj->history[index][size - 1].val = val;
+        return;
+    }
+    
+    // If the dynamic array is full, double its capacity
+    if (size >= obj->capacities[index]) {
+        obj->capacities[index] *= 2;
+        obj->history[index] = (SnapEntry*)realloc(obj->history[index], obj->capacities[index] * sizeof(SnapEntry));
+    }
+    
+    // Append the new value change to the index's history
+    obj->history[index][size].snap_id = obj->current_snap_id;
+    obj->history[index][size].val = val;
+    obj->sizes[index]++;
+}
+
+int snapshotArraySnap(SnapshotArray* obj) {
+    // Return the current snap_id, then increment it for future modifications
+    return obj->current_snap_id++;
+}
+
+int snapshotArrayGet(SnapshotArray* obj, int index, int snap_id) {
+    int low = 0;
+    int high = obj->sizes[index] - 1;
+    int ans_val = 0;
+    
+    // Binary search to find the entry with the highest snap_id <= target snap_id
+    while (low <= high) {
+        int mid = low + (high - low) / 2;
+        if (obj->history[index][mid].snap_id <= snap_id) {
+            ans_val = obj->history[index][mid].val; // Target found or passed; store potential answer
+            low = mid + 1;                          // Look for a newer matching snapshot to the right
+        } else {
+            high = mid - 1;                         // This entry happened too late; look to the left
+        }
+    }
+    
+    return ans_val;
+}
+
+void snapshotArrayFree(SnapshotArray* obj) {
+    if (obj) {
+        // Free every dynamically allocated index history timeline
+        for (int i = 0; i < obj->length; i++) {
+            free(obj->history[i]);
+        }
+        free(obj->history);
+        free(obj->sizes);
+        free(obj->capacities);
+        free(obj);
+    }
+}
+
+
+
