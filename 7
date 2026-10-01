@@ -1,0 +1,41 @@
+#include <string.h>
+
+int getMaxRepetitions(char* s1, int n1, char* s2, int n2) {
+    if (n1 == 0 || n2 == 0) return 0;
+
+    int len1 = strlen(s1);
+    int len2 = strlen(s2);
+    
+    // d[i][0] stores how many full copies of s2 are matched within a single s1 block
+    // starting at s2 index i.
+    // d[i][1] stores the resulting next index in s2 to match after that s1 block.
+    int d[105][2];
+    
+    // Phase 1: Precompute transitions for each starting index in s2
+    for (int i = 0; i < len2; ++i) {
+        int j = i;
+        int cnt = 0;
+        for (int k = 0; k < len1; ++k) {
+            if (s1[k] == s2[j]) {
+                if (++j == len2) {
+                    j = 0; // Wrap around to the start of s2
+                    ++cnt; // One full s2 matched
+                }
+            }
+        }
+        d[i][0] = cnt;
+        d[i][1] = j;
+    }
+    
+    // Phase 2: Simulate processing n1 blocks of s1 using our precomputed steps
+    int total_s2_matches = 0;
+    int s2_idx = 0;
+    for (int block = 0; block < n1; ++block) {
+        total_s2_matches += d[s2_idx][0];
+        s2_idx = d[s2_idx][1];
+    }
+    
+    // S1 contains total_s2_matches of s2. 
+    // Divide by n2 to find the total count of S2 = [s2, n2] strings.
+    return total_s2_matches / n2;
+}
