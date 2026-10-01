@@ -1,0 +1,39 @@
+#include <stdbool.h>
+#include <stdlib.h>
+#include <ctype.h>
+
+bool* camelMatch(char** queries, int queriesSize, char* pattern, int* returnSize) {
+    *returnSize = queriesSize;
+    
+    // Allocate the boolean result array
+    bool* result = (bool*)malloc(queriesSize * sizeof(bool));
+    
+    for (int i = 0; i < queriesSize; i++) {
+        char* query = queries[i];
+        int q_idx = 0;
+        int p_idx = 0;
+        bool is_match = true;
+        
+        while (query[q_idx] != '\0') {
+            // If characters match, advance the pattern pointer
+            if (pattern[p_idx] != '\0' && query[q_idx] == pattern[p_idx]) {
+                p_idx++;
+            } 
+            // If they don't match and the query character is uppercase, it's an invalid match
+            else if (isupper((unsigned char)query[q_idx])) {
+                is_match = false;
+                break;
+            }
+            q_idx++;
+        }
+        
+        // The match is only valid if we successfully matched the entire pattern
+        if (pattern[p_idx] != '\0') {
+            is_match = false;
+        }
+        
+        result[i] = is_match;
+    }
+    
+    return result;
+}
