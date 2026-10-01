@@ -1,0 +1,42 @@
+#include <stdlib.h>
+
+int magicalString(int n) {
+    if (n <= 0) return 0;
+    if (n <= 3) return 1; // For n=1, 2, or 3, there is only one '1' in the base "122"
+
+    // Allocate an array to store the generated values. 
+    // We add 1 to the size to safely handle scenarios where a write overflows past 'n'.
+    int* s = (int*)malloc((n + 1) * sizeof(int));
+    
+    // Initialize the base sequence "122"
+    s[0] = 1;
+    s[1] = 2;
+    s[2] = 2;
+
+    int head = 2; // Points to the value determining the repeat frequency of the next group
+    int tail = 3; // Points to the next empty spot to write to
+    int num = 1;  // The next number to write (alternates between 1 and 2)
+    int count = 1; // Tracks total count of 1s (we already counted s[0])
+
+    while (tail < n) {
+        int repeat = s[head]; // How many times to write 'num'
+        
+        for (int i = 0; i < repeat; i++) {
+            s[tail] = num;
+            
+            // Only count if it's a '1' and within our tracking limit 'n'
+            if (num == 1 && tail < n) {
+                count++;
+            }
+            tail++;
+        }
+        
+        // Move head to determine the next group's length
+        head++;
+        // Toggle num between 1 and 2 (3 - 1 = 2; 3 - 2 = 1)
+        num = 3 - num; 
+    }
+
+    free(s);
+    return count;
+}
