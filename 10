@@ -1,0 +1,16 @@
+#include <stdbool.h>
+
+bool isArraySpecial(int* nums, int numsSize) {
+    // Loop through the array starting from the second element
+    for (int i = 1; i < numsSize; i++) {
+        // Use the bitwise AND operator (& 1) to check the parity of the numbers.
+        // (nums[i] & 1) returns 1 if odd, and 0 if even.
+        // If both adjacent numbers have the exact same parity, it's not a special array.
+        if ((nums[i] & 1) == (nums[i - 1] & 1)) {
+            return false;
+        }
+    }
+    
+    // If we checked all pairs and found no matching parities, the array is special.
+    return true;
+}
