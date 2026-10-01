@@ -1,0 +1,56 @@
+#include <string.h>
+
+// Helper function to reverse a section of the string in-place
+void reverse(char* start, char* end) {
+    while (start < end) {
+        char temp = *start;
+        *start = *end;
+        *end = temp;
+        start++;
+        end--;
+    }
+}
+
+char* reverseWords(char* s) {
+    if (s == NULL) return s;
+
+    int len = strlen(s);
+    
+    // Step 1: Reverse the entire string
+    reverse(s, s + len - 1);
+
+    int write_idx = 0;
+    int read_idx = 0;
+
+    // Step 2 & 3: Reverse individual words and clean up multiple spaces
+    while (read_idx < len) {
+        // Skip leading/intermediary spaces
+        while (read_idx < len && s[read_idx] == ' ') {
+            read_idx++;
+        }
+
+        // If we reached the end, break
+        if (read_idx >= len) break;
+
+        // Add a single space between words (but not before the first word)
+        if (write_idx > 0) {
+            s[write_idx++] = ' ';
+        }
+
+        // Mark the start of the current word
+        int word_start = write_idx;
+
+        // Copy the word to its new compacted position
+        while (read_idx < len && s[read_idx] != ' ') {
+            s[write_idx++] = s[read_idx++];
+        }
+
+        // Reverse the word back to its correct orientation
+        reverse(s + word_start, s + write_idx - 1);
+    }
+
+    // Null-terminate the cleaned string
+    s[write_idx] = '\0';
+    
+    return s;
+}
